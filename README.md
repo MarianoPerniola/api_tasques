@@ -18,7 +18,14 @@ Activar entorn virtual:
 pipenv shell
 ```
 
+Si dona error a l'utilitzar `pipenv``
+```bash
+python - m pipenv install --dev
+python -m shell
+```
+
 Per executar el projecte:
 ```bash
+cd app/
 uvicorn main:app --reload
 ```
