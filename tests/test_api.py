@@ -5,47 +5,65 @@ client = TestClient(app)
 
 # TODO: els vostres test venen aqui
 
+def test_get_tasks(mocker):
+    mock_db = MagicMock()
+    
+    mock_db.query.return_value.all.return_value = [
+        Task(id=1, title="Tarea 1", description="Descripción 1"),
+        Task(id=2, title="Tarea 2", description="Descripción 2")
+    ]
+    
+    tasks = get_tasks(mock_db)
+    
+    assert len(tasks) == 2
+    assert tasks[0].id == 1
+    assert tasks[0].title == "Tarea 1"
+    assert tasks[1].title == "Tarea 2"
 
-# Test de `update_tasks`
-def test_update_tasks(mocker):
-    # Mockeamos la sesión de la base de datos
+
+def test_create_tasks(mocker):
     mock_db = MagicMock()
 
-    # Simulamos una tarea ya existente
+    task_data = TaskCreate(title="Nueva tarea", description="Descripción de la nueva tarea")
+    
+    mock_task = Task(id=1, **task_data.dict())
+    mock_db.add.return_value = None
+    mock_db.commit.return_value = None
+    mock_db.refresh.return_value = mock_task
+    
+    task = create_tasks(mock_db, task_data)
+    
+    assert task.id == 1
+    assert task.title == "Nueva tarea"
+    assert task.description == "Descripción de la nueva tarea"
+    
+def test_update_tasks(mocker):
+    mock_db = MagicMock()
+
     existing_task = Task(id=1, title="Tarea existente", description="Descripción existente")
     mock_db.query.return_value.filter.return_value.first.return_value = existing_task
 
-    # Creamos un objeto TaskUpdate con los nuevos datos
     task_update = TaskUpdate(title="Tarea actualizada", description="Descripción actualizada")
 
-    # Simulamos el comportamiento de la actualización
     mock_db.commit.return_value = None
     mock_db.refresh.return_value = existing_task
 
-    # Llamamos a la función `update_tasks`
     updated_task = update_tasks(mock_db, 1, task_update)
 
-    # Comprobamos que los datos de la tarea se han actualizado correctamente
     assert updated_task.title == "Tarea actualizada"
     assert updated_task.description == "Descripción actualizada"
 
 
-# Test de `delete_tasks`
 def test_delete_tasks(mocker):
-    # Mockeamos la sesión de la base de datos
     mock_db = MagicMock()
 
-    # Simulamos una tarea existente
     existing_task = Task(id=1, title="Tarea a eliminar", description="Descripción de la tarea")
     mock_db.query.return_value.filter.return_value.first.return_value = existing_task
 
-    # Simulamos el comportamiento de la eliminación
     mock_db.commit.return_value = None
 
-    # Llamamos a la función `delete_tasks`
     deleted_task = delete_tasks(mock_db, 1)
 
-    # Comprobamos que la tarea ha sido eliminada
     assert deleted_task.id == 1
     assert deleted_task.title == "Tarea a eliminar"
     mock_db.delete.assert_called_once_with(existing_task)
